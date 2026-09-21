@@ -1,0 +1,4 @@
+{
+  "name": "Django: Service",
+  "variables": ["serviceName"]
+}

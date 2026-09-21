@@ -1,0 +1,25 @@
+{
+  "codeTemplateTool.templatesPath": "{workspace}/.vscode/__templates__",
+  "python.defaultInterpreterPath": "${workspaceFolder}/vgit/Scripts/python.exe",
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}"
+  ],
+  "python.analysis.exclude": [
+    "**/__pycache__",
+    ".vscode/**",
+    "vgit/**"
+  ],
+  "python.analysis.ignore": [
+    ".vscode/**",
+    "vgit/**"
+  ],
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.vscode/**": true,
+    "**/vgit/**": true,
+    "**/__pycache__/**": true
+  },
+  "editor.formatOnSave": true,
+  "editor.tabSize": 4,
+  "editor.insertSpaces": true
+}

@@ -7,10 +7,21 @@ Repositorio con entorno virtual listo para ejecutar Django (Python) para clases 
 ## Tabla de Contenidos
 - [Proyecto Entorno Virtual Django](#proyecto-entorno-virtual-django)
 - [Tabla de Contenidos](#tabla-de-contenidos)
+- [🎓 Guía para Estudiantes e IA](#-guía-para-estudiantes-e-ia)
 - [Prerrequisitos](#prerrequisitos)
 - [Instalación y Configuración](#instalación-y-configuración)
 - [Uso](#uso)
 - [Tecnologías Utilizadas](#tecnologías-utilizadas)
+
+---
+
+## 🎓 Guía para Estudiantes e IA
+
+Este repositorio cuenta con un sistema de agentes y habilidades de IA diseñado para el aprendizaje activo:
+* 📖 [**`GUIA_ESTUDIANTES.md`**](GUIA_ESTUDIANTES.md): Manual paso a paso para aprender usando los agentes y habilidades.
+* 💡 [**`exemplars.md`**](exemplars.md): Código de referencia modelo (Cheat Sheet) de modelos, serializers, vistas y servicios.
+* 🤖 [**`AGENTS.md`**](AGENTS.md): Reglas de arquitectura y configuración de asistentes inteligentes.
+* 📐 [**`docs/analisis-preliminar.md`**](docs/analisis-preliminar.md): Análisis preliminar del Sistema de Gestión de Biblioteca (problema, actores, entidades, modelo de datos, endpoints y consultas ORM).
 
 ---
 

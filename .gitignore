@@ -1,4 +1,15 @@
 # Django #
-__pycache__
-db.sqlite3
+__pycache__/
 *.pyc
+*.sqlite3
+db.sqlite3
+
+# Virtual environment #
+vgit/
+
+# Environment variables #
+.env
+
+# Editor / OS #
+.vscode/settings.local.json
+*.log
