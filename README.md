@@ -23,6 +23,7 @@ Este repositorio cuenta con un sistema de agentes y habilidades de IA diseñado 
 * 💡 [**`exemplars.md`**](exemplars.md): Código de referencia modelo (Cheat Sheet) de modelos, serializers, vistas y servicios.
 * 🤖 [**`AGENTS.md`**](AGENTS.md): Reglas de arquitectura y configuración de asistentes inteligentes.
 * 📐 [**`docs/analisis-preliminar.md`**](docs/analisis-preliminar.md): Análisis preliminar del Sistema de Gestión de Biblioteca (problema, actores, entidades, modelo de datos, endpoints y consultas ORM).
+* 🧩 [**`docs/resumen-implementacion.md`**](docs/resumen-implementacion.md): Resumen explicativo del código ya implementado (modelos, serializadores, vistas, rutas) con glosario de términos de Django/DRF de mayor complejidad.
 
 ---
 
@@ -39,6 +40,9 @@ El entorno virtual (`vgit/`) **no viene incluido en el repositorio** (está excl
 `.gitignore`), por lo que cada persona debe crearlo localmente antes de trabajar.
 
 ```powershell
+# 0. Verificar la versión de Python instalada (se requiere 3.12+, idealmente 3.13+)
+python --version
+
 # 1. Crear el entorno virtual (se genera la carpeta vgit/)
 python -m venv vgit
 
@@ -55,12 +59,35 @@ pip install -r requirements.txt
 > En Windows también se puede activar con `.\vgit\Scripts\activate.bat` desde `cmd.exe`, o con
 > `source vgit/Scripts/activate` desde Git Bash.
 
+> ⚠️ **Si `python --version` muestra una versión inferior a 3.12**, actualiza Python antes de
+> continuar (descarga la última versión desde [python.org/downloads](https://www.python.org/downloads/)
+> marcando la opción "Add python.exe to PATH" durante la instalación). Si tienes varias versiones
+> instaladas en Windows, puedes usar el *Python Launcher* para elegir una específica sin cambiar
+> el comando anterior, por ejemplo:
+> ```powershell
+> py -3.13 -m venv vgit
+> ```
+
 Una vez activado, el prompt mostrará el prefijo `(vgit)`. A partir de ahí, todos los comandos de
 `manage.py` deben ejecutarse con el intérprete del entorno virtual, por ejemplo:
 
 ```bash
 .\vgit\Scripts\python.exe manage.py runserver
 ```
+
+### Instalación manual de dependencias (alternativa a `requirements.txt`)
+
+Si prefieres instalar los paquetes uno por uno (por ejemplo, para fijar versiones puntuales o sin
+activar el entorno primero), puedes invocar `pip` directamente a través del intérprete de `vgit`:
+
+```powershell
+.\vgit\Scripts\python.exe -m pip install "Django==5.2.17" djangorestframework==3.18.1 python-decouple==3.8
+```
+
+> ⚠️ `requirements.txt` es la fuente de verdad del proyecto y actualmente fija `Django==6.1.1`. El
+> comando anterior instala una versión distinta (`5.2.17`); úsalo solo si necesitas replicar ese
+> entorno puntual, y luego ejecuta `pip install -r requirements.txt` para volver a las versiones
+> oficiales del repositorio.
 
 ---
 
