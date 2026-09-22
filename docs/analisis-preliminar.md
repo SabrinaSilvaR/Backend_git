@@ -1,14 +1,5 @@
 # Análisis Preliminar — Sistema de Gestión de Biblioteca (INACAP)
 
-> Documento derivado de la **Propuesta de Especificación de Requerimientos de Software (SRS)**.
-> Traduce el SRS a un análisis conceptual y a un diseño preliminar de datos, modelos Django,
-> operaciones y endpoints, listo para entrar al flujo spec-driven (`/spec-propose`).
->
-> **Estado:** preliminar. Los modelos y endpoints son una propuesta de partida, no la
-> implementación final. Las reglas de negocio se referencian como `RN-xx` / `RF-xx` según el SRS.
-
----
-
 ## Tabla de Contenidos
 
 **Parte A — Análisis conceptual**
@@ -65,7 +56,7 @@ operadores de mesón y administradores) que cubra:
   → resuelve el control de accesos.
 
 > **Fuera del alcance:** portal de autoservicio o login para alumnos (la aplicación es 100 % para
-> operadores de mesón) y préstamos intersedes.
+> operadores de mesón).
 
 ---
 
@@ -78,10 +69,6 @@ operadores de mesón y administradores) que cubra:
 | **Operador Temporal / Estudiante en Apoyo** | Directo | Mismas operaciones de mesón, pero con **cuenta de expiración programada**: al vencer la fecha, el sistema revoca el acceso automáticamente. | Operador con vigencia limitada. |
 | **Estudiante / Alumno Solicitante** | **Indirecto** | **No interactúa con la aplicación.** Entrega sus datos en el mesón (correo `@inacap` / `@inacapmail` o RUT) y **recibe** el comprobante digital en su correo. | Ninguno (sin login). |
 | **Equipo de TI y Ciberseguridad** | Indirecto | Valida políticas de autenticación institucional, MFA y retención de logs. | Ninguno (rol de gobierno). |
-
-> **Decisión de diseño clave:** el alumno (`Student`) **no es un usuario del sistema**. Es una
-> entidad de datos, no una cuenta. Por eso se modela como una tabla propia y **no** como un
-> `User` de Django.
 
 ---
 
@@ -164,9 +151,9 @@ Agrupadas en los 4 módulos del SRS, con su requerimiento funcional asociado:
 > del mismo libro y 12 tablets del mismo modelo. El *stock total* y la *disponibilidad* se calculan
 > contando ejemplares, mientras que el catálogo se navega por título. Sin esta separación no se
 > puede saber **qué copia exacta** tiene cada alumno.
->
+<!-- >
 > *(Equivalencia con el código Django: `User`, `Student`, `Category`, `ResourceTitle`,
-> `ResourceItem`, `Loan`, `LoanReceipt`, `Sanction`, `AuditLog` — ver tabla completa en §7.)*
+> `ResourceItem`, `Loan`, `LoanReceipt`, `Sanction`, `AuditLog` — ver tabla completa en §7.)* -->
 
 ---
 
@@ -200,11 +187,11 @@ Agrupadas en los 4 módulos del SRS, con su requerimiento funcional asociado:
 
 ## 7. Modelo preliminar de datos
 
-> El diagrama entidad-relación es el **modelo conceptual/de negocio**, en español, pensado para
+<!-- > El diagrama entidad-relación es el **modelo conceptual/de negocio**, en español, pensado para
 > stakeholders no técnicos (jefatura de biblioteca, TI). La implementación en Django (§8) usa
 > nombres en inglés porque es código, siguiendo la política de idioma del repositorio
 > ([`AGENTS.md`](../AGENTS.md#language-policy)). La tabla de equivalencias al final de esta
-> sección conecta ambos mundos.
+> sección conecta ambos mundos. -->
 
 ```mermaid
 erDiagram
@@ -328,11 +315,11 @@ erDiagram
 ---
 
 ## 8. Principales clases o modelos Django
-
+<!-- 
 > ⚠️ **Esqueletos de partida, no la implementación final.** Muestran campos y relaciones; la
 > validación de dominio va en `serializers.py`, y las mutaciones (calcular `due_at`, enviar el
 > comprobante, aplicar la sanción) en `services.py`. Revisa [`exemplars.md`](../exemplars.md) y
-> `.vscode/__templates__/` antes de escribirlos.
+> `.vscode/__templates__/` antes de escribirlos. -->
 
 ### 8.1 `User` — personal de biblioteca (RF-01, RF-02, RF-03)
 
