@@ -24,7 +24,7 @@ class ResourceItemViewSet(viewsets.ModelViewSet):
     serializer_class = ResourceItemSerializer
 
 class LoanViewSet(viewsets.ModelViewSet):
-    queryset = Loan.objects.all()
+    queryset = Loan.objects.select_related('resource_item__resource_title', 'student')
     serializer_class = LoanSerializer
 
 class SanctionViewSet(viewsets.ModelViewSet):

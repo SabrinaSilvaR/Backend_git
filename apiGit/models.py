@@ -2,10 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 
-
-# Create your models here.
 class User(AbstractUser):
-    """Library staff account. Students are NOT users of this system."""
 
     class Role(models.TextChoices):
         ADMIN = "ADMIN", "Administrator"
@@ -17,8 +14,11 @@ class User(AbstractUser):
     valid_from = models.DateTimeField(null=True, blank=True)
     valid_until = models.DateTimeField(null=True, blank=True)   # auto-expiry
     mfa_secret = models.CharField(max_length=64, blank=True)    # TOTP
+    # is_active (heredado) = soft delete. NUNCA borrado físico.
+    def __str__(self):
+        return f"{self.username} ({self.get_full_name()})"
 
-
+    
 class Student(models.Model):
     rut = models.CharField(max_length=12, unique=True)
     institutional_email = models.EmailField(unique=True)        # @inacap | @inacapmail
@@ -26,7 +26,10 @@ class Student(models.Model):
     last_name = models.CharField(max_length=80)
     is_active = models.BooleanField(default=True)               # soft delete
     created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f"{self.rut} - {self.first_name} {self.last_name}"
 
+    
 class Category(models.Model):
     class TermUnit(models.TextChoices):
         HOURS = "HOURS", "Hours"
@@ -35,7 +38,8 @@ class Category(models.Model):
     name = models.CharField(max_length=60, unique=True)         # Libro, Tablet, Audífono...
     term_unit = models.CharField(max_length=5, choices=TermUnit.choices)
     is_active = models.BooleanField(default=True)
-
+    def __str__(self):
+        return self.name
 
 class ResourceTitle(models.Model):
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="titles")
@@ -43,14 +47,18 @@ class ResourceTitle(models.Model):
     author_or_brand = models.CharField(max_length=120, blank=True)
     reference_code = models.CharField(max_length=60, blank=True)   # ISBN / SKU
     is_active = models.BooleanField(default=True)
+    def __str__(self):
+        return f"{self.title} ({self.category.name})"
 
+    
 class ResourceItem(models.Model):
     class Status(models.TextChoices):
         AVAILABLE = "AVAILABLE", "Available"
         ON_LOAN = "ON_LOAN", "On loan"
         MAINTENANCE = "MAINTENANCE", "In maintenance"
         RETIRED = "RETIRED", "Retired"
-
+    def __str__(self):
+        return f"{self.barcode} ({self.resource_title.title})"
     resource_title = models.ForeignKey(
         ResourceTitle, on_delete=models.PROTECT, related_name="items"
     )
@@ -88,6 +96,8 @@ class Loan(models.Model):
     returned_at = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.ACTIVE)
 
+    def __str__(self):
+        return f"Loan of {self.resource_item.barcode} to {self.student.rut} ({self.status})"
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -102,6 +112,8 @@ class LoanReceipt(models.Model):
     recipient_email = models.EmailField()
     sent_at = models.DateTimeField(auto_now_add=True)           # marca auditable
     delivery_status = models.CharField(max_length=8, default="SENT")
+    def __str__(self):
+        return f"Receipt for loan {self.loan.id} to {self.recipient_email}"
 
 
 class Sanction(models.Model):
@@ -112,7 +124,10 @@ class Sanction(models.Model):
     ends_at = models.DateTimeField()                            # fin del bloqueo
     rule_applied = models.CharField(max_length=60)
     is_active = models.BooleanField(default=True)
+    def __str__(self):
+        return f"Sanction for {self.student.rut} ({self.rule_applied})"
 
+    
 class AuditLog(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="audit_logs"
@@ -122,3 +137,5 @@ class AuditLog(models.Model):
     entity_id = models.PositiveIntegerField()
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f"AuditLog: {self.action} on {self.entity_name} ({self.entity_id}) by {self.user.username}"
