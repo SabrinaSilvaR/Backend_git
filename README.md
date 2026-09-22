@@ -9,6 +9,7 @@ Repositorio con entorno virtual listo para ejecutar Django (Python) para clases 
 - [Tabla de Contenidos](#tabla-de-contenidos)
 - [🎓 Guía para Estudiantes e IA](#-guía-para-estudiantes-e-ia)
 - [Prerrequisitos](#prerrequisitos)
+- [Entorno Virtual](#entorno-virtual)
 - [Instalación y Configuración](#instalación-y-configuración)
 - [Uso](#uso)
 - [Tecnologías Utilizadas](#tecnologías-utilizadas)
@@ -32,9 +33,40 @@ Este repositorio cuenta con un sistema de agentes y habilidades de IA diseñado 
 
 ---
 
+## Entorno Virtual
+
+El entorno virtual (`vgit/`) **no viene incluido en el repositorio** (está excluido vía
+`.gitignore`), por lo que cada persona debe crearlo localmente antes de trabajar.
+
+```powershell
+# 1. Crear el entorno virtual (se genera la carpeta vgit/)
+python -m venv vgit
+
+# 2. Activar el entorno virtual (PowerShell en Windows)
+.\vgit\Scripts\Activate.ps1
+
+# En caso de bloqueo por política de ejecución de scripts, ejecutar una sola vez:
+# Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+
+# 3. Instalar las dependencias del proyecto
+pip install -r requirements.txt
+```
+
+> En Windows también se puede activar con `.\vgit\Scripts\activate.bat` desde `cmd.exe`, o con
+> `source vgit/Scripts/activate` desde Git Bash.
+
+Una vez activado, el prompt mostrará el prefijo `(vgit)`. A partir de ahí, todos los comandos de
+`manage.py` deben ejecutarse con el intérprete del entorno virtual, por ejemplo:
+
+```bash
+.\vgit\Scripts\python.exe manage.py runserver
+```
+
+---
+
 ## Instalación y Configuración
 
-Comandos para inicializar y configurar el proyecto:
+Comandos para inicializar y configurar el proyecto (con el entorno virtual ya activado):
 
 ```bash
 # Generar scripts de migración basados en los modelos definidos
