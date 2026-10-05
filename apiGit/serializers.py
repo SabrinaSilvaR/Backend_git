@@ -1,5 +1,10 @@
 from rest_framework import serializers
-from .models import User, Student, Category, ResourceTitle, ResourceItem, Loan, Sanction, AuditLog
+
+from .models import (
+    AuditLog, Category, Loan, LoanReceipt, ResourceItem, ResourceTitle, Sanction, Student, User,
+)
+from .validations import validate_rut, validate_staff_email, validate_student_email
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -16,25 +21,47 @@ class UserSerializer(serializers.ModelSerializer):
             'valid_until',
             'is_active',
             'password',
-            'mfa_secret',
         ]
+        # password is never returned in the response
         extra_kwargs = {
             'password': {'write_only': True, 'required': False},
-            'mfa_secret': {'write_only': True, 'required': False},
+            'is_active': {'read_only': True},
         }
 
-    def create(self, validated_data: dict) -> User:
-        password = validated_data.pop('password', None)
-        user = User.objects.create_user(password=password, **validated_data)
-        return user
+    def validate_email(self, value):
+        return validate_staff_email(value)
 
-    def update(self, instance: User, validated_data: dict) -> User:
+    def validate(self, attrs):
+        # when creating a user the password is required
+        if self.instance is None and not attrs.get('password'):
+            raise serializers.ValidationError({'password': 'La contraseña es obligatoria'})
+
+        valid_from = attrs.get('valid_from')
+        valid_until = attrs.get('valid_until')
+        if valid_from and valid_until and valid_until <= valid_from:
+            raise serializers.ValidationError(
+                {'valid_until': 'La fecha de caducidad debe ser posterior al inicio'}
+            )
+
+        # RF-03: a temporary account always needs an expiry date, on create and on update
+        is_temporary = attrs.get('is_temporary', getattr(self.instance, 'is_temporary', False))
+        effective_valid_until = attrs.get(
+            'valid_until', getattr(self.instance, 'valid_until', None)
+        )
+        if is_temporary and not effective_valid_until:
+            raise serializers.ValidationError(
+                {'valid_until': 'Una cuenta temporal necesita fecha de caducidad'}
+            )
+        return attrs
+
+    def update(self, instance, validated_data):
         password = validated_data.pop('password', None)
         user = super().update(instance, validated_data)
         if password:
-            user.set_password(password)
+            user.set_password(password)  # hash the password, never save it as plain text
             user.save(update_fields=['password'])
         return user
+
 
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -48,38 +75,96 @@ class StudentSerializer(serializers.ModelSerializer):
             'is_active',
             'created_at',
         ]
+        read_only_fields = ['is_active', 'created_at']
+
+    def validate_rut(self, value):
+        return validate_rut(value)
+
+    def validate_institutional_email(self, value):
+        return validate_student_email(value)
+
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ['id', 'name', 'term_unit', 'is_active']
 
+
 class ResourceTitleSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(source='category.name', read_only=True)
+
     class Meta:
         model = ResourceTitle
         fields = [
             'id',
             'category',
+            'category_name',
             'title',
             'author_or_brand',
             'reference_code',
             'is_active',
         ]
 
+
+class CatalogSerializer(serializers.ModelSerializer):
+    """Title with its stock, used in the counter view (RF-05)."""
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    total_items = serializers.IntegerField(read_only=True)
+    available_items = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = ResourceTitle
+        fields = [
+            'id',
+            'title',
+            'author_or_brand',
+            'category',
+            'category_name',
+            'total_items',
+            'available_items',
+        ]
+
+
 class ResourceItemSerializer(serializers.ModelSerializer):
+    title = serializers.CharField(source='resource_title.title', read_only=True)
+
     class Meta:
         model = ResourceItem
         fields = [
             'id',
             'resource_title',
+            'title',
             'barcode',
             'status',
             'location',
             'acquired_at',
         ]
 
+    def validate_status(self, value):
+        # ON_LOAN is only set by the loan service, not by hand
+        if value == ResourceItem.Status.ON_LOAN:
+            raise serializers.ValidationError(
+                'El estado ON_LOAN se asigna solo al registrar un préstamo'
+            )
+        if self.instance and self.instance.status == ResourceItem.Status.ON_LOAN:
+            raise serializers.ValidationError(
+                'No se puede cambiar el estado de un ejemplar que está prestado'
+            )
+        return value
+
+
+class LoanReceiptSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LoanReceipt
+        fields = ['id', 'recipient_email', 'sent_at', 'delivery_status']
+
+
 class LoanSerializer(serializers.ModelSerializer):
-    resource_item_title = serializers.SerializerMethodField()
+    """Used to show loans (read only). To create a loan use LoanCreateSerializer."""
+    resource_item_title = serializers.CharField(
+        source='resource_item.resource_title.title', read_only=True
+    )
+    barcode = serializers.CharField(source='resource_item.barcode', read_only=True)
     student_name = serializers.SerializerMethodField()
 
     class Meta:
@@ -87,6 +172,7 @@ class LoanSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'resource_item',
+            'barcode',
             'resource_item_title',
             'student',
             'student_name',
@@ -99,37 +185,28 @@ class LoanSerializer(serializers.ModelSerializer):
             'returned_at',
             'status',
         ]
+        read_only_fields = fields
 
-    def get_resource_item_title(self, obj: Loan) -> str:
-        return obj.resource_item.resource_title.title
-    def get_student_name(self, obj:Loan)->str:
-        return f"{obj.student.first_name} {obj.student.last_name}"
+    def get_student_name(self, obj):
+        return f'{obj.student.first_name} {obj.student.last_name}'
 
-    def validate(self, attrs):
-        if self.instance is None and self.initial_data.get('checked_in_by'):
-            raise serializers.ValidationError(
-                {'checked_in_by': 'No se puede enviar este campo al crear.'}
-            )
 
-        resource_item = attrs.get('resource_item')
-        if resource_item:
-            active_loans = Loan.objects.filter(resource_item=resource_item, status='ACTIVE')
-            if self.instance is not None:
-                active_loans = active_loans.exclude(pk=self.instance.pk)
-            if active_loans.exists():
-                raise serializers.ValidationError(
-                    {'resource_item': 'Este ejemplar ya tiene un préstamo activo.'}
-                )
-
-        return attrs
+class LoanCreateSerializer(serializers.Serializer):
+    """Input data to register a loan. due_at, term_unit and operator are calculated."""
+    resource_item = serializers.PrimaryKeyRelatedField(queryset=ResourceItem.objects.all())
+    student = serializers.PrimaryKeyRelatedField(queryset=Student.objects.all())
+    term_value = serializers.IntegerField(min_value=1)
 
 
 class SanctionSerializer(serializers.ModelSerializer):
+    student_rut = serializers.CharField(source='student.rut', read_only=True)
+
     class Meta:
         model = Sanction
         fields = [
             'id',
             'student',
+            'student_rut',
             'loan',
             'minutes_late',
             'starts_at',
@@ -138,12 +215,16 @@ class SanctionSerializer(serializers.ModelSerializer):
             'is_active',
         ]
 
+
 class AuditLogSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
+
     class Meta:
         model = AuditLog
         fields = [
             'id',
             'user',
+            'username',
             'action',
             'entity_name',
             'entity_id',

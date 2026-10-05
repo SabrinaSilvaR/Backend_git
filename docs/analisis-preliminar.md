@@ -574,7 +574,7 @@ además un permiso `IsAdminRole`.
 | `GET` / `POST` | `/resource-items/` | Ejemplares físicos. Filtros: `?status=`, `?resource_title=`. | `200` / `201` |
 | `GET` | `/resource-items/by-barcode/{barcode}/` | **Lectura rápida en mesón** al escanear. | `200` / `404` |
 | `PATCH` | `/resource-items/{id}/` | Cambia el estado (p. ej. a `MAINTENANCE`). | `200` |
-| `GET` | `/catalog/availability/` | **Vista de mesón**: stock total y disponible por título. | `200` |
+| `GET` | `/resource-titles/availability/` | **Vista de mesón**: stock total y disponible por título. | `200` |
 
 ### Alumnos
 

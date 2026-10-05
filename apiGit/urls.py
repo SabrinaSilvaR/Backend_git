@@ -1,10 +1,16 @@
+from django.urls import path
 from rest_framework.routers import DefaultRouter
-from .views import CategoryViewSet, UserViewSet, LoanViewSet, StudentViewSet, AuditLogViewSet, SanctionViewSet, ResourceItemViewSet, ResourceTitleViewSet
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
+from .views import (
+    AuditLogViewSet, CategoryViewSet, LoanViewSet, ResourceItemViewSet, ResourceTitleViewSet,
+    SanctionViewSet, StudentViewSet, UserViewSet, inventory_report_view, login_view,
+    logout_view, mfa_verify_view, shift_summary_view,
+)
 
 app_name = 'apiGit'
-
-router = DefaultRouter()
-# router.register('example', ExampleViewSet, basename='example')
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
@@ -16,4 +22,14 @@ router.register(r'loans', LoanViewSet, basename='loan')
 router.register(r'sanctions', SanctionViewSet, basename='sanction')
 router.register(r'audit-logs', AuditLogViewSet, basename='audit-log')
 
-urlpatterns = router.urls
+urlpatterns = [
+    path('auth/login/', login_view, name='login'),
+    path('auth/mfa/verify/', mfa_verify_view, name='mfa-verify'),
+    path('auth/logout/', logout_view, name='logout'),
+    path('reports/inventory/', inventory_report_view, name='inventory-report'),
+    path('reports/shift-summary/', shift_summary_view, name='shift-summary'),
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh')
+]
+
+urlpatterns += router.urls
